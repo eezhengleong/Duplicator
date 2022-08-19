@@ -33,7 +33,7 @@
      <string notr="true">font: 26pt &quot;Reem Kufi&quot;;</string>
     </property>
     <property name="text">
-     <string>File Duplicator</string>
+     <string>Folder Duplicator</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
@@ -64,12 +64,12 @@
      <enum>Qt::Vertical</enum>
     </property>
    </widget>
-   <widget class="QComboBox" name="server_combo">
+   <widget class="QComboBox" name="server">
     <property name="geometry">
      <rect>
-      <x>120</x>
+      <x>70</x>
       <y>150</y>
-      <width>240</width>
+      <width>320</width>
       <height>25</height>
      </rect>
     </property>
@@ -105,11 +105,11 @@
      </property>
     </item>
    </widget>
-   <widget class="QPushButton" name="browse">
+   <widget class="QPushButton" name="browse_folder">
     <property name="geometry">
      <rect>
-      <x>330</x>
-      <y>270</y>
+      <x>400</x>
+      <y>295</y>
       <width>75</width>
       <height>23</height>
      </rect>
@@ -118,21 +118,39 @@
      <string>Browse</string>
     </property>
    </widget>
-   <widget class="QLineEdit" name="filename">
+   <widget class="FileEdit" name="dnd">
     <property name="geometry">
      <rect>
-      <x>120</x>
-      <y>270</y>
-      <width>201</width>
-      <height>20</height>
+      <x>70</x>
+      <y>220</y>
+      <width>320</width>
+      <height>170</height>
      </rect>
     </property>
+    <property name="font">
+     <font>
+      <family>Modern</family>
+      <pointsize>20</pointsize>
+      <weight>50</weight>
+      <italic>true</italic>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">font: italic 20pt &quot;Modern&quot;;</string>
+    </property>
+    <property name="text">
+     <string>Drag and Drop</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
    </widget>
-   <widget class="QPushButton" name="browse_2">
+   <widget class="QPushButton" name="browse_path">
     <property name="geometry">
      <rect>
-      <x>330</x>
-      <y>350</y>
+      <x>400</x>
+      <y>490</y>
       <width>75</width>
       <height>23</height>
      </rect>
@@ -141,21 +159,21 @@
      <string>Browse</string>
     </property>
    </widget>
-   <widget class="QLineEdit" name="filename_2">
+   <widget class="QLineEdit" name="path">
     <property name="geometry">
      <rect>
-      <x>120</x>
-      <y>350</y>
-      <width>201</width>
+      <x>70</x>
+      <y>490</y>
+      <width>320</width>
       <height>20</height>
      </rect>
     </property>
    </widget>
-   <widget class="QLabel" name="label_2">
+   <widget class="QLabel" name="label_progress">
     <property name="geometry">
      <rect>
-      <x>520</x>
-      <y>150</y>
+      <x>510</x>
+      <y>190</y>
       <width>271</width>
       <height>41</height>
      </rect>
@@ -170,11 +188,11 @@
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QLabel" name="label_3">
+   <widget class="QLabel" name="label_progress_num">
     <property name="geometry">
      <rect>
-      <x>520</x>
-      <y>190</y>
+      <x>510</x>
+      <y>230</y>
       <width>271</width>
       <height>41</height>
      </rect>
@@ -192,8 +210,8 @@
    <widget class="QLineEdit" name="number">
     <property name="geometry">
      <rect>
-      <x>605</x>
-      <y>400</y>
+      <x>595</x>
+      <y>340</y>
       <width>101</width>
       <height>31</height>
      </rect>
@@ -202,8 +220,8 @@
    <widget class="QLabel" name="label_4">
     <property name="geometry">
      <rect>
-      <x>520</x>
-      <y>360</y>
+      <x>510</x>
+      <y>300</y>
       <width>271</width>
       <height>31</height>
      </rect>
@@ -218,11 +236,11 @@
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton">
+   <widget class="QPushButton" name="start">
     <property name="geometry">
      <rect>
-      <x>580</x>
-      <y>460</y>
+      <x>570</x>
+      <y>410</y>
       <width>161</width>
       <height>81</height>
      </rect>
@@ -239,11 +257,20 @@ font: 20pt &quot;MS Shell Dlg 2&quot;;</string>
    <widget class="QLabel" name="label_5">
     <property name="geometry">
      <rect>
-      <x>120</x>
-      <y>240</y>
+      <x>70</x>
+      <y>190</y>
       <width>221</width>
       <height>21</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>MS Shell Dlg 2</family>
+      <pointsize>12</pointsize>
+      <weight>50</weight>
+      <italic>false</italic>
+      <bold>false</bold>
+     </font>
     </property>
     <property name="styleSheet">
      <string notr="true">font: 12pt &quot;MS Shell Dlg 2&quot;;</string>
@@ -258,8 +285,8 @@ font: 20pt &quot;MS Shell Dlg 2&quot;;</string>
    <widget class="QLabel" name="label_6">
     <property name="geometry">
      <rect>
-      <x>120</x>
-      <y>320</y>
+      <x>70</x>
+      <y>460</y>
       <width>221</width>
       <height>21</height>
      </rect>
@@ -274,23 +301,34 @@ font: 20pt &quot;MS Shell Dlg 2&quot;;</string>
      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
     </property>
    </widget>
-   <widget class="QLabel" name="label_7">
+   <widget class="QLabel" name="validate_msg">
     <property name="geometry">
      <rect>
-      <x>130</x>
-      <y>450</y>
+      <x>70</x>
+      <y>400</y>
       <width>271</width>
-      <height>81</height>
+      <height>31</height>
      </rect>
     </property>
+    <property name="font">
+     <font>
+      <family>MS Shell Dlg 2</family>
+      <pointsize>16</pointsize>
+      <weight>50</weight>
+      <italic>false</italic>
+      <bold>false</bold>
+     </font>
+    </property>
     <property name="styleSheet">
-     <string notr="true">font: 28pt &quot;MS Shell Dlg 2&quot;;</string>
+     <string notr="true">font: 16pt &quot;MS Shell Dlg 2&quot;;
+color:rgb(0, 198, 0);
+color: rgb(255, 0, 0);</string>
     </property>
     <property name="text">
-     <string>Error / Valid</string>
+     <string>Error!</string>
     </property>
     <property name="alignment">
-     <set>Qt::AlignCenter</set>
+     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
     </property>
    </widget>
   </widget>
@@ -306,6 +344,13 @@ font: 20pt &quot;MS Shell Dlg 2&quot;;</string>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>FileEdit</class>
+   <extends>QLineEdit</extends>
+   <header>FileEdit.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

@@ -2,7 +2,7 @@
 	
 # importing os module
 import os
-
+import pyfastcopy
 # importing shutil module
 import shutil
 
@@ -11,7 +11,7 @@ from datetime import date
 from datetime import datetime
 
 # path
-path = 'C:/vdspc_image_vone'
+path = 'C:/vdspc_image_vone/2022/08/11'
 
 # List files and directories
 # in 'C:/vdspc_image_vone'
@@ -24,7 +24,7 @@ for folder in dirs:
 
 
 # Source path
-src = 'C:/vdspc_image_vone/AXI-EZLEONG-NB[@$@]2022-08-11-08-31-30'
+src = 'C:/vdspc_image_vone/2022/08/11/AXI-EZLEONG-NB[@$@]2022-08-11-08-31-30'
 
 
 
