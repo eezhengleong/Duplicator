@@ -1,8 +1,11 @@
 # Python program to explain shutil.copytree() method
-	
+
+#importing pyfastcopy
+#import pyfastcopy
+
 # importing os module
 import os
-import pyfastcopy
+
 # importing shutil module
 import shutil
 
@@ -11,7 +14,7 @@ from datetime import date
 from datetime import datetime
 
 # path
-path = 'C:/vdspc_image_vone/2022/08/11'
+path = 'C:/vdspc_image_vone'
 
 # List files and directories
 # in 'C:/vdspc_image_vone'
@@ -24,20 +27,26 @@ for folder in dirs:
 
 
 # Source path
-src = 'C:/vdspc_image_vone/2022/08/11/AXI-EZLEONG-NB[@$@]2022-08-11-08-31-30'
+src = 'C:/vdspc_image_vone/AXI-EZLEONG-NB[@$@]2022-08-11-08-31-30'
 
 
 
 #---------------------------------------------------------------------
 
 cond = ']'
+cond1 = '/'
 
 position = src.index(cond)
+position1 = src.rindex(cond1)
 
 print(position)
+print(position1)
 
 date1 = src[position + 1:]
 print(date1)
+
+frontName = src[position1 + 1 : position +1]
+print(frontName)
 
 YYYY = int(date1[0:4])
 MM = int(date1[5:7])
@@ -57,27 +66,36 @@ print("MM= ", MIN)
 print("SS= ", SS)
 
 #--------------------------------------------------------------------
+count = 0
 
-for x in range(20):
+while count < 20:
     
     # Destination path
-    dest = 'D:/vdspc_image_vone/' + str(YYYY) + '/' + str(MM).zfill(2) + '/' + str(DD).zfill(2) + '/AXI-EZLEONG-NB[@$@]2022-08-11-' + str(HH).zfill(2) + '-' + str(MIN).zfill(2) + '-' + str(SS).zfill(2)
+    dest = 'D:/vdspc_image_vone/' + str(YYYY) + '/' + str(MM).zfill(2) + '/' + str(DD).zfill(2) + '/' + frontName + '2022-08-11-' + str(HH).zfill(2) + '-' + str(MIN).zfill(2) + '-' + str(SS).zfill(2)
 
-    #-----------------------------------------------------------------------
-    # Copy the content of
-    # source to destination
-    destination = shutil.copytree(src, dest)
-    #SS1= int(SS)
-    SS += 1
-    if SS == 60:
-        SS = 0
-        MIN += 1
-        
-    if MIN == 60:
-        MIN = 0
-        HH += 1
-    #SS= str(SS1)
+    isdir = os.path.isdir(dest)
 
-
+    if isdir == True:
+        SS += 1
+        if SS == 60:
+            SS = 0
+            MIN += 1
+            
+        if MIN == 60:
+            MIN = 0
+            HH += 1
+    
+    else: 
+        shutil.copytree(src, dest) 
+        count += 1
+        SS += 1
+        if SS == 60:
+            SS = 0
+            MIN += 1
+            
+        if MIN == 60:
+            MIN = 0
+            HH += 1
+    
 
     
