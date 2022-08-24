@@ -175,7 +175,7 @@
     </property>
     <property name="font">
      <font>
-      <pointsize>10</pointsize>
+      <pointsize>9</pointsize>
      </font>
     </property>
    </widget>
@@ -381,7 +381,7 @@ font: 20pt &quot;MS Shell Dlg 2&quot;;</string>
     </property>
     <property name="font">
      <font>
-      <pointsize>10</pointsize>
+      <pointsize>9</pointsize>
      </font>
     </property>
    </widget>
