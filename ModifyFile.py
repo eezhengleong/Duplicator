@@ -2,7 +2,7 @@ import os
 import shutil
 import time
 
-src = 'C:/vdspc_image_vone/AXI-EZLEONG-NB[@$@]2022-08-15-08-43-26'
+#src = 'C:/vdspc_image_vone/AXI-EZLEONG-NB[@$@]2022-08-15-08-43-26'
 
 
 def searchLine(src, search_phrase): # function used to find out the line location of the 4 phrases
@@ -47,11 +47,11 @@ def editLine(TXTYear, TXTMonth, TXTDay, TXTHour, TXTMins, TXTSecs, dest, line_nu
 
     if x==0:
         TXTSecs -= 1
-        if TXTSecs == 0:
+        if TXTSecs == -1:
             TXTSecs = 59
             TXTMins -= 1
         
-        if TXTMins == 0:
+        if TXTMins == -1:
             TXTMins == 59
             TXTHour -= 1
 
@@ -107,7 +107,7 @@ def DateAndTime(src):
 
     return(YYYY, MM, DD, HH, MIN, SS, frontName)
 
-def duplicateFolder(YYYY, MM, DD, HH, MIN, SS, frontName):
+def duplicateFolder(YYYY, MM, DD, HH, MIN, SS, frontName, src):
 
     count = 0
     while count <= 0:
@@ -125,12 +125,12 @@ def duplicateFolder(YYYY, MM, DD, HH, MIN, SS, frontName):
             count += 1
             return (dest)
 
-def main():
+def main(src, num):
+
     
     start_time = time.time()
 
     count = 0
-    num = 10
 
     phrase = ['Panel insp start time', 'Panel insp end time', 'Board revision', 'Review start time']
     lineList = []
@@ -144,7 +144,7 @@ def main():
 
     while count < num:
 
-        dest = duplicateFolder(YYYY, MM, DD, HH, MIN, SS, frontName)
+        dest = duplicateFolder(YYYY, MM, DD, HH, MIN, SS, frontName, src)
         count += 1
 
         print(dest)
@@ -165,4 +165,3 @@ def main():
     end_time = time.time()
     print(end_time - start_time)
 
-main()

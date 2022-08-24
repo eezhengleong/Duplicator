@@ -3,7 +3,7 @@ from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog, QMessageBox
 from PyQt5.uic import loadUi
 from PyQt5.QtGui import QIntValidator
-import DuplicateFolder, FindFileSize
+import DuplicateFolder, FindFileSize, ModifyFile
 import time
 
 class Duplicator(QMainWindow):
@@ -70,7 +70,7 @@ class Duplicator(QMainWindow):
             if self.check_available_space():
                 print("Success")
                 start_time = time.time()
-                DuplicateFolder.FolderDuplicate(self.pname, self.number.text())
+                ModifyFile.main(self.pname, int(self.number.text()))
                 end_time = time.time()
                 self.prompt_dialog("Finished","Duplication finished. \nTime elapsed: "+"{:.2f}".format(end_time-start_time)+" seconds")
             else:
