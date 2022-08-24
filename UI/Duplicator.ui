@@ -184,7 +184,7 @@
      <rect>
       <x>510</x>
       <y>190</y>
-      <width>271</width>
+      <width>291</width>
       <height>41</height>
      </rect>
     </property>
@@ -192,7 +192,7 @@
      <string notr="true">font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
     </property>
     <property name="text">
-     <string>In Progress / Done</string>
+     <string>Welcome!</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
@@ -203,7 +203,7 @@
      <rect>
       <x>510</x>
       <y>230</y>
-      <width>271</width>
+      <width>291</width>
       <height>41</height>
      </rect>
     </property>
@@ -211,7 +211,7 @@
      <string notr="true">font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
     </property>
     <property name="text">
-     <string>500/1000</string>
+     <string>-</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
@@ -220,7 +220,7 @@
    <widget class="QLineEdit" name="number">
     <property name="geometry">
      <rect>
-      <x>595</x>
+      <x>604</x>
       <y>340</y>
       <width>101</width>
       <height>31</height>
@@ -235,7 +235,7 @@
      <rect>
       <x>510</x>
       <y>300</y>
-      <width>271</width>
+      <width>291</width>
       <height>31</height>
      </rect>
     </property>
@@ -252,7 +252,7 @@
    <widget class="QPushButton" name="start">
     <property name="geometry">
      <rect>
-      <x>570</x>
+      <x>573</x>
       <y>410</y>
       <width>161</width>
       <height>81</height>

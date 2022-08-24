@@ -1,9 +1,11 @@
+from cProfile import run
 import sys, os
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog, QMessageBox
 from PyQt5.uic import loadUi
 from PyQt5.QtGui import QIntValidator
-import DuplicateFolder, FindFileSize, ModifyFile
+from PyQt5.QtCore import QObject, QThread, pyqtSignal
+import FindFileSize, ModifyFile, ModiifyFile2
 import time
 
 class Duplicator(QMainWindow):
@@ -17,15 +19,40 @@ class Duplicator(QMainWindow):
         self.onlyInt = QIntValidator()
         self.onlyInt.setRange(0,86400)
         self.number.setValidator(self.onlyInt)
-        self.pname = ""         #path name of selected folder
-        self.fname = ""         #folder name of selected folder
-        self.oname = ""         #output path name 
-        self.fsize = 0          #file size
-        self.disk_space = {}    #available disk space, inside this will have {"Total","Used","Free"}
+        self.pname = ""                                                 #path name of selected folder
+        self.fname = ""                                                 #folder name of selected folder
+        self.oname = ""                                                 #output path name 
+        self.fsize = 0                                                  #file size
+        self.disk_space = {}                                            #available disk space, inside this will have {"Total","Used","Free"}
+        self.copies = 0
+        self.server.currentIndexChanged.connect(self.set_default_path)
         self.dnd.textChanged.connect(self.set_pname)
         self.browse_folder.clicked.connect(self.browsefolder)
         self.browse_path.clicked.connect(self.browsepath)
+        self.path.textChanged.connect(self.find_disk_size)
         self.start.clicked.connect(self.start_clicked)
+
+    def reportProgress(self,n):
+        self.label_progress_num.setText(str(n) + "/" + str(self.copies))
+        #print("changing label ", type(n), " ", n)
+
+
+    def set_default_path(self):
+        if self.server.currentIndex() == 0:
+            self.oname = ""
+            self.path.setText("")
+        
+        elif self.server.currentIndex() == 1:
+            self.oname = "D:/vdspc_image_vone"
+            self.path.setText(self.oname)
+
+        elif self.server.currentIndex() == 2:
+            self.oname = "C:/vdspc_image_vone"
+            self.path.setText(self.oname)
+
+        elif self.server.currentIndex() == 3:
+            self.oname = "C:/vdspc_image_vone"
+            self.path.setText(self.oname)
 
     def browsefolder(self):
         self.pname=QFileDialog.getExistingDirectory(self, 'Select a folder', 'D:/')
@@ -47,11 +74,13 @@ class Duplicator(QMainWindow):
         self.oname=QFileDialog.getExistingDirectory(self, 'Select a folder', 'D:/')
         if self.oname != "":
             self.path.setText(self.oname)
-            self.find_disk_size()
 
     def find_disk_size(self):
-        self.disk_space = FindFileSize.get_disk_size(self.oname)
-        self.diskspace.setText("Free space: "+ "{:.2f}".format(self.disk_space["Free"]/1024/1024/1024)+"GB")
+        if self.oname == "":
+            self.diskspace.setText("Free space: ")
+        else:
+            self.disk_space = FindFileSize.get_disk_size(self.oname)
+            self.diskspace.setText("Free space: "+ "{:.2f}".format(self.disk_space["Free"]/1024/1024/1024)+"GB")
             
     def start_clicked(self):
         if self.server.currentText() == "--Choose Server--":
@@ -69,10 +98,7 @@ class Duplicator(QMainWindow):
         else:
             if self.check_available_space():
                 print("Success")
-                start_time = time.time()
-                ModifyFile.main(self.pname, int(self.number.text()))
-                end_time = time.time()
-                self.prompt_dialog("Finished","Duplication finished. \nTime elapsed: "+"{:.2f}".format(end_time-start_time)+" seconds")
+                self.DuplicateFiles()
             else:
                 self.prompt_dialog("Error", "Not enough space!")
 
@@ -94,9 +120,42 @@ class Duplicator(QMainWindow):
         dialog = QMessageBox()
         dialog.setWindowTitle(title)
         dialog.setText(text)
-        dialog.setIcon(QMessageBox.Warning)
+        if title == "Error":
+            dialog.setIcon(QMessageBox.Warning)
+        elif title == "Finished":
+            dialog.setIcon(QMessageBox.Information)
         dialog.exec_()
 
+    def DuplicateFiles(self):
+        self.proMsg("In Progress")
+        start_time = time.time()
+        self.copies = int(self.number.text())
+        self.worker = MainBackgroundThread(self.pname, self.copies, self.oname)
+        self.worker.started.connect(lambda: self.start.setEnabled(False))
+        self.worker.finished.connect(lambda: self.prompt_dialog("Finished","Duplication finished.\nTime elapsed: "+"{:.2f}".format(time.time()-start_time)+" seconds"))
+        self.worker.finished.connect(lambda: self.proMsg("Done"))
+        self.worker.finished.connect(lambda: self.start.setEnabled(True))
+        self.worker.progress.connect(self.reportProgress)
+        self.worker.start()
+
+    def proMsg(self, txt):
+        self.label_progress.setText(txt)
+
+class MainBackgroundThread(QThread):
+    started = pyqtSignal()
+    finished = pyqtSignal()
+    progress = pyqtSignal(int)
+    def __init__(self, pathname, copies, outname):
+        QThread.__init__(self)
+        self.pathname, self.copies, self.outname = pathname, copies, outname
+    
+    def run(self):
+        self.started.emit()
+        lineList, formating = ModiifyFile2.find_param(self.pathname)
+        for i in range(self.copies):
+            ModiifyFile2.main(self.pathname, self.outname, lineList, formating)
+            self.progress.emit(i+1)
+        self.finished.emit()
 
 app=QApplication(sys.argv)
 mainwindow=Duplicator()
