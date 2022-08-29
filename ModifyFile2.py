@@ -88,8 +88,8 @@ def DateAndTime(src):
     position = src.index(cond)
     position1 = src.rindex(cond1)
 
-    print(position)
-    print(position1)
+    # print(position)
+    # print(position1)
 
     date1 = src[position + 1:]
     print(date1)
@@ -145,12 +145,12 @@ def main(src, opath, lineList, formating):
 
     TXTYear, TXTMonth, TXTDay, TXTHour, TXTMins, TXTSecs, XX = DateAndTime(dest)
 
-    print(TXTYear)
-    print(TXTMonth)
-    print(TXTDay)
-    print(TXTHour)
-    print(TXTMins)
-    print(TXTSecs)
+    # print(TXTYear)
+    # print(TXTMonth)
+    # print(TXTDay)
+    # print(TXTHour)
+    # print(TXTMins)
+    # print(TXTSecs)
 
     for x in range(4):
 
