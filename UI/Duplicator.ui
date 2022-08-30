@@ -10,6 +10,12 @@
     <height>600</height>
    </rect>
   </property>
+  <property name="font">
+   <font>
+    <italic>false</italic>
+    <kerning>true</kerning>
+   </font>
+  </property>
   <property name="mouseTracking">
    <bool>true</bool>
   </property>
@@ -93,6 +99,16 @@ QMainWindow{background-color: rgb(240, 240, 240);}
     <property name="cursor">
      <cursorShape>PointingHandCursor</cursorShape>
     </property>
+    <property name="styleSheet">
+     <string notr="true">border:1px solid;
+border-radius: 4px;</string>
+    </property>
+    <property name="editable">
+     <bool>false</bool>
+    </property>
+    <property name="currentText">
+     <string>--Choose Server--</string>
+    </property>
     <item>
      <property name="text">
       <string>--Choose Server--</string>
@@ -146,10 +162,10 @@ QPushButton:hover{background-color: rgb(85, 170, 255);}
     </property>
     <property name="font">
      <font>
-      <family>MS Shell Dlg 2</family>
+      <family>Comic Sans MS</family>
       <pointsize>20</pointsize>
       <weight>50</weight>
-      <italic>true</italic>
+      <italic>false</italic>
       <bold>false</bold>
       <underline>false</underline>
       <kerning>false</kerning>
@@ -341,7 +357,7 @@ QPushButton:hover{background-color: rgb(170, 255, 127);}
      <string notr="true">font: 12pt &quot;MS Shell Dlg 2&quot;;</string>
     </property>
     <property name="text">
-     <string>Choose a folder to duplicate:</string>
+     <string>Choose a source to duplicate:</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
@@ -399,7 +415,7 @@ QPushButton:hover{background-color: rgb(170, 255, 127);}
      <rect>
       <x>70</x>
       <y>385</y>
-      <width>111</width>
+      <width>151</width>
       <height>21</height>
      </rect>
     </property>
@@ -416,7 +432,7 @@ QPushButton:hover{background-color: rgb(170, 255, 127);}
      <string notr="true">font: 12pt &quot;MS Shell Dlg 2&quot;;</string>
     </property>
     <property name="text">
-     <string>Folder selected:</string>
+     <string>Folder/File selected:</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
@@ -493,7 +509,7 @@ QPushButton:hover{background-color: rgb(255, 85, 127);}
      <string notr="true"/>
     </property>
     <property name="text">
-     <string>Folder size: -</string>
+     <string>Folder/File size: -</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>

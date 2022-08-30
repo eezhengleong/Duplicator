@@ -1,0 +1,303 @@
+import sys, time, configparser, os
+from PyQt5 import QtWidgets, uic
+from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog, QMessageBox
+from PyQt5.uic import loadUi
+from PyQt5.QtGui import QIntValidator
+from PyQt5.QtCore import QThread
+from Duplicator import Ui_MainWindow
+import FindFileSize, vdspcDuplicateWorker, FindFileSizeWorker, vlibDuplicateWorker, FileEdit
+
+class DuplicatorClass(QMainWindow, Ui_MainWindow):
+    def __init__(self, *args, obj=None, **kwargs):
+        super(DuplicatorClass,self).__init__(*args, **kwargs)
+        # loadUi("UI\Duplicator.ui",self)
+        self.setupUi(self)
+
+        self.config_obj = configparser.ConfigParser()
+        self.config_obj.read("DuplicatorConfig.cfg")
+        self.defaultpath = self.config_obj["default_output"]
+        self.files_needed = self.config_obj["files_to_look_for"]
+
+        #initialize parameters and variables that will be used
+        self.folder_name.setReadOnly(True)
+        self.path.setReadOnly(True)
+        self.onlyInt = QIntValidator()
+        self.onlyInt.setRange(0,86400)
+        self.number.setValidator(self.onlyInt)
+        self.pname = ""                                                 #path name of selected folder
+        self.fname = ""                                                 #folder name of selected folder
+        self.oname = ""                                                 #output path name 
+        self.fsize = 0                                                  #file size
+        self.disk_space = {}                                            #available disk space, inside this will have {"Total","Used","Free"}, but we will only use free
+        self.copies = 0                                                 #holds the number of files to be copied
+        self.copied = 0                                                 #holds the number of coiped files
+        self.duplicating = False                                        #indicator for duplication process
+        self.serverType = ""                                            #holds the server type
+        self.setBtn()                                                   #enable or disable start and cancel button
+        self.changebg()                                                 #change bg colour based on status
+        #set actions on the UI
+        self.server.currentIndexChanged.connect(self.set_default_path)  #default path will be set whenever a new server is chosen
+        self.dnd.textChanged.connect(self.set_pname)                    #drag and drop(dnd) feature
+        self.browse_folder.clicked.connect(self.browsefolder)           #open file explorer to select a source folder
+        self.browse_path.clicked.connect(self.browsepath)               #open file explorer to select an output path
+        self.path.textChanged.connect(self.find_disk_size)              #find available disk size when output ppath is selected
+        self.start.clicked.connect(self.start_clicked)                  #perfrom duplication when start button is clicked
+        self.cancel.clicked.connect(self.cancelOpt)                     #cancel duplication when cancel button is clicked
+        self.progressBar.setValue(0)                                    #set progress bar value to 0 at the start
+
+    def set_default_path(self): #default output path based on server type
+        if self.server.currentIndex() == 0:
+            self.oname = ""
+            self.path.setText("")
+            self.serverType = ""
+        
+        elif self.server.currentIndex() == 1:
+            self.oname = self.defaultpath["VDSPC"]
+            self.path.setText(self.oname)
+            self.serverType = "VDSPC"
+
+        elif self.server.currentIndex() == 2:
+            self.oname = self.defaultpath["VONE"]
+            self.path.setText(self.oname)
+            self.serverType = "VONE"
+
+        elif self.server.currentIndex() == 3:
+            self.oname = self.defaultpath["VLIB"]
+            self.path.setText(self.oname)
+            self.serverType = "V-Lib"
+
+    def browsefolder(self): #setting source path name (pname) from file browsing
+        if self.serverType == "VDSPC":
+            self.pname=QFileDialog.getExistingDirectory(self, 'Select a folder', 'C:/vdspc_image_vone')
+
+        elif self.serverType == "V-Lib":
+            self.pname=QFileDialog.getOpenFileName(self, 'Select a .datj file', 'C:/CPI/cad', "datj(*.datj)")[0]
+
+        else:
+            self.prompt_dialog("Warning","Please first choose a server")
+
+        if self.pname != "" and self.serverType != "":
+            self.set_fname()
+
+    def set_pname(self): #setting source path name (pname) from drag and drop
+        if self.dnd.text() != "Drag and Drop" and self.serverType != "":
+            self.pname = self.dnd.getFilePath()
+            self.dnd.setText("Drag and Drop")
+            self.set_fname()
+        elif self.dnd.text() != "Drag and Drop":
+            self.dnd.setText("Drag and Drop")
+            self.prompt_dialog("Warning", "Please first choose a server!")
+
+    def set_fname(self): #finding the source file/folder name and display in UI
+        print("setting fname")
+        last_seperator = self.pname.rindex("/")
+        self.fname = self.pname[last_seperator + 1:]
+        self.folder_name.setText(self.fname)
+        self.FindFolderSize()
+
+    def FindFolderSize(self): #find the size of source file/folder using thread to prevent UI freezing
+        print("finding file size")
+        self.thread = QThread()
+        self.worker = FindFileSizeWorker.FindFolderSize()
+        self.worker.moveToThread(self.thread)
+        self.thread.started.connect(lambda: self.worker.run(self.pname))
+        self.worker.finished.connect(lambda: self.getFolderSize(self.worker))
+        self.worker.finished.connect(self.thread.quit)
+        self.worker.finished.connect(self.worker.deleteLater)
+        self.worker.finished.connect(self.thread.deleteLater)
+        self.thread.start()
+
+    def getFolderSize(self, worker): #method used to retrieve source file/folder size from thread
+        print("getting folder size")
+        self.fsize = worker.getTotal()
+        bytesFormat = ["B","KB","MB","GB","TB"]
+        self.fsizedivided = self.fsize
+        for i in bytesFormat:
+            if self.fsizedivided > 1024:
+                self.fsizedivided = self.fsizedivided / 1024
+            else:
+                self.foldersize.setText("Folder/File size: " + "{:.2f}".format(self.fsizedivided)+i)
+                break
+
+    def browsepath(self): #setting output path (oname) from browsing
+        self.oname=QFileDialog.getExistingDirectory(self, 'Select a folder', 'D:/')
+        if self.oname != "":
+            self.path.setText(self.oname)
+
+    def find_disk_size(self): #method used to find disk size of selected output path
+        if self.oname == "":
+            self.diskspace.setText("Free space: ")
+        else:
+            self.disk_space = FindFileSize.get_disk_size(self.oname)
+            self.diskspace.setText("Free space: "+ "{:.2f}".format(self.disk_space["Free"]/1024/1024/1024)+"GB")
+            
+    def start_clicked(self): #conditions when start button is clicked
+        if self.server.currentText() == "--Choose Server--":
+            self.prompt_dialog("Error","Please choose a server!")
+        
+        elif self.pname == "":
+            self.prompt_dialog("Error","Please choose a folder!")
+        
+        elif self.oname == "":
+            self.prompt_dialog("Error","Please choose an output path!")
+
+        elif self.number.text() == "0" or self.number.text() == "":
+            self.prompt_dialog("Error","Please input number of copies!")
+
+        else:
+            if self.find_files_needed():
+                if self.check_available_space():
+                    print("Success")
+                    self.duplicating = True
+                    self.setBtn()
+                    self.changebg()
+                    if self.serverType == "VDSPC":
+                        self.DuplicateVDSPC()
+                    elif self.serverType == "V-Lib":
+                        self.DuplicateVLib()
+                else:
+                    self.prompt_dialog("Error", "Not enough space!")
+
+    def find_files_needed(self):
+        if self.serverType == "VDSPC":
+            if os.path.isfile(self.pname+"/"+self.files_needed[self.serverType]):
+                return True
+            else:
+                self.prompt_dialog("Error", self.files_needed[self.serverType]+" is not inside the source!")
+                return False
+        elif self.serverType == "V-Lib":
+            name, ext = os.path.splitext(self.pname)
+            if ext != self.files_needed[self.serverType]:
+                self.prompt_dialog("Error", self.files_needed[self.serverType]+" is not inside the source!")
+                return False
+            else:
+                return True
+
+    def changebg(self): #method for changing bg colour when process starts and ends
+        if self.duplicating:
+            self.setStyleSheet("""QMainWindow{background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0 rgba(170, 255, 127, 255), stop:0.875 rgba(255, 255, 255, 255));}""")
+        else:
+            self.setStyleSheet("""QMainWindow{background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0 rgba(255, 255, 127, 255), stop:0.875 rgba(255, 255, 255, 255));}""")
+
+    def check_available_space(self): #compare space needed with space available on disk
+        num = int(self.number.text())
+        space_needed = num * self.fsize
+        if space_needed < self.disk_space["Free"]:
+            print("Space needed: ",space_needed)
+            print("Free Space available: ",self.disk_space["Free"])
+            print("Enough space")
+            return True
+        else:
+            print("Space needed: ",space_needed)
+            print("Free Space available: ",self.disk_space["Free"])
+            print("not enough space, False returned")
+            return False
+
+    def prompt_dialog(self, title, text): #method to prompt notification dialog
+        dialog = QMessageBox()
+        dialog.setWindowTitle(title)
+        dialog.setText(text)
+        if title == "Error" or title == "Warning":
+            dialog.setIcon(QMessageBox.Warning)
+        elif title == "Finished" or title == "Cancelled":
+            dialog.setIcon(QMessageBox.Information)
+        dialog.exec_()
+
+    def DuplicateVDSPC(self): #VDSPC duplication process using thread
+        self.proMsg("In Progress")
+        start_time = time.time()
+        self.copies = int(self.number.text())
+        self.label_progress_num.setText("0/"+str(self.copies))
+        self.progressBar.setValue(0)
+        self.thread = QThread()
+        print("thread created")
+        print("is thread alive: ", self.thread.isRunning())
+        self.worker = vdspcDuplicateWorker.DuplicateObject()
+        print("worker created")
+        self.worker.moveToThread(self.thread)
+        print("worker moved to thread")
+        self.worker.setParam(self.pname, self.copies, self.oname)
+        self.thread.started.connect(self.worker.run)
+        self.worker.finished.connect(lambda: self.resetParam(start_time))
+        self.worker.finished.connect(self.thread.quit)
+        self.worker.finished.connect(self.worker.deleteLater)
+        self.worker.finished.connect(self.thread.deleteLater)
+        self.worker.progress.connect(self.reportProgress)
+        self.thread.start()
+        print("is thread running: ", self.thread.isRunning())
+
+    def DuplicateVLib(self): #V-Lib duplication processusing thread
+        self.proMsg("In Progress")
+        start_time = time.time()
+        self.copies = int(self.number.text())
+        self.label_progress_num.setText("0/"+str(self.copies))
+        self.progressBar.setValue(0)
+        self.thread = QThread()
+        self.worker = vlibDuplicateWorker.DuplicateObject()
+        self.worker.moveToThread(self.thread)
+        self.worker.setParam(self.pname, self.copies, self.oname)
+        self.thread.started.connect(self.worker.run)
+        self.worker.finished.connect(lambda: self.resetParam(start_time))
+        self.worker.finished.connect(self.thread.quit)
+        self.worker.finished.connect(self.worker.deleteLater)
+        self.worker.finished.connect(self.thread.deleteLater)
+        self.worker.progress.connect(self.reportProgress)
+        self.thread.start()
+
+    def reportProgress(self,n): #update progress number and progress bar by retrieving data from thread
+        self.label_progress_num.setText(str(n) + "/" + str(self.copies))
+        self.copied = n
+        self.progressBar.setValue(int((self.copied/self.copies)*100))
+
+    def proMsg(self, txt): #setting text on top of progress number
+        self.label_progress.setText(txt)
+
+    def cancelOpt(self): #conditions when cancel button is clicked
+        dialog = QMessageBox()
+        dialog.setWindowTitle("Cancel")
+        dialog.setText("Are you sure to cancel?")
+        dialog.setIcon(QMessageBox.Question)
+        dialog.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+        returnValue = dialog.exec()
+        if returnValue == QMessageBox.Ok:
+            self.worker.cancel()
+        
+    def resetParam(self, start_time): #reset parameters and variables when process is finished or cancelled
+        if self.worker.copied == self.copies:
+            self.proMsg("Done")
+            self.prompt_dialog("Finished","Duplication finished.\nTime elapsed: "+"{:.2f}".format(time.time()-start_time)+" seconds")
+        else:
+            self.proMsg("Cancelled")
+            self.prompt_dialog("Cancelled","Duplication Cancelled.\nTime elapsed: "+"{:.2f}".format(time.time()-start_time)+" seconds")
+        self.duplicating = False
+        self.setBtn()
+        self.changebg()
+
+    def setBtn(self): #enable or disable start and cancel button based on duplication status
+        if self.duplicating:
+            self.start.setEnabled(False)
+            self.start.setStyleSheet("background-color: gray; color: rgb(0, 0, 0);")
+            self.cancel.setEnabled(True)
+            self.cancel.setStyleSheet("""QPushButton{background-color: rgb(255, 0, 0);
+                                         color: rgb(0, 0, 0);}
+                                         QPushButton:hover{background-color: rgb(255, 85, 127);}""")
+        else:
+            self.start.setEnabled(True)
+            self.start.setStyleSheet("""QPushButton{background-color: rgb(0, 255, 127);
+                                        color: rgb(0, 0, 0);}
+                                        QPushButton:hover{background-color: rgb(170, 255, 127);}""")
+            self.cancel.setEnabled(False)
+            self.cancel.setStyleSheet("background-color: gray; color: rgb(0, 0, 0);")
+
+#opening a window with widgets
+if __name__ == '__main__':
+    app=QApplication(sys.argv)
+    mainwindow=DuplicatorClass()
+    widget=QtWidgets.QStackedWidget()
+    widget.addWidget(mainwindow)
+    widget.setWindowTitle("Duplicator")
+    widget.setFixedWidth(800)
+    widget.setFixedHeight(600)
+    widget.show()
+    # sys.exit(app.exec_())
+    app.exec()

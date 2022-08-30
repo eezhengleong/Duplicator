@@ -1,7 +1,7 @@
 import os
 import shutil
 
-src = 'C:/CPI/cad/AOITestBoard.datj'
+src = 'C:/CPI/cad/AOITestBoard_testing.datj'
 
 def extractName(src):
     condition = '/'
@@ -13,18 +13,13 @@ def extractName(src):
 
     return(DBName)
 
-
-def DuplicateFile(src):
+def DuplicateFile(src, output, dbname):
     
     count = 0
     num = 0 
 
     while count <= 0:
-
-        DBName = extractName(src)
-        print(DBName)
-
-        dest = 'D:/CPI/cad/' + DBName + '_' + str(num) + '.datj'
+        dest = output + '/' + dbname + '_' + str(num) + '.datj'
 
         print(dest)
 
@@ -39,13 +34,9 @@ def DuplicateFile(src):
             os.makedirs(os.path.dirname(dest), exist_ok=True)
             shutil.copyfile(src, dest)
             count += 1
-            return (num)
 
 
 
-def main(src):
-    
-    num = DuplicateFile(src)
-    print(num)
+def main(src,output, dbname):
+    DuplicateFile(src, output, dbname)
 
-main(src)
