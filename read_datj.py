@@ -2,7 +2,7 @@
 
 import json
 
-f = open("C:/CPI/cad/AOITestBoard_testing.datj")
+f = open("C:/CPI/cad/AOITestBoard_new.datj")
 
 data = json.load(f)
 

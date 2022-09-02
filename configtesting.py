@@ -1,7 +1,7 @@
 import configparser, os
 
-config_obj = configparser.ConfigParser()
+config_obj = configparser.ConfigParser(interpolation = None)
 config_obj.read("DuplicatorConfig.cfg")
-defaultpath = config_obj["default_output"]
-files_needed = config_obj["files_to_look_for"]
-print("Repair ticket is inside: ", os.path.isfile("D:/vdspc_image_vone/AXI-EZLEONG-NB[@$@]2022-08-11-08-31-30"+"/"+files_needed["VDSPC"]))
+#defaultpath = dict(config_obj.items("query"))
+queries = config_obj["query"]
+print(queries['q1'])

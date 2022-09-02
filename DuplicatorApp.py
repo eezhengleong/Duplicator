@@ -1,22 +1,35 @@
 import sys, time, configparser, os
-from PyQt5 import QtWidgets, uic
+from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog, QMessageBox
-from PyQt5.uic import loadUi
 from PyQt5.QtGui import QIntValidator
 from PyQt5.QtCore import QThread
+from PyQt5.uic import loadUi
 from Duplicator import Ui_MainWindow
-import FindFileSize, vdspcDuplicateWorker, FindFileSizeWorker, vlibDuplicateWorker, FileEdit
+import FindFileSize, vdspcDuplicateWorker, FindFileSizeWorker, vlibDuplicateWorker, FileEdit, logging
 
-class DuplicatorClass(QMainWindow, Ui_MainWindow):
-    def __init__(self, *args, obj=None, **kwargs):
-        super(DuplicatorClass,self).__init__(*args, **kwargs)
-        # loadUi("UI\Duplicator.ui",self)
-        self.setupUi(self)
+# class DuplicatorClass(QMainWindow, Ui_MainWindow):
+#     def __init__(self, *args, obj=None, **kwargs):
+#         super(DuplicatorClass,self).__init__(*args, **kwargs)
+#         self.setupUi(self)
 
-        self.config_obj = configparser.ConfigParser()
+class DuplicatorClass(QMainWindow):
+    def __init__(self):
+        super(DuplicatorClass,self).__init__()
+        loadUi("UI\Duplicator.ui",self)
+        
+        self.config_obj = configparser.ConfigParser(interpolation = None)
         self.config_obj.read("DuplicatorConfig.cfg")
         self.defaultpath = self.config_obj["default_output"]
         self.files_needed = self.config_obj["files_to_look_for"]
+        self.postgres = self.config_obj["postgresql"]
+        self.queries = self.config_obj["query"]
+        self.db = {}
+        if self.config_obj.has_section("postgresql"):
+            params = self.config_obj.items("postgresql")
+            for param in params:
+                self.db[param[0]] = param[1]
+        else:
+            raise Exception('Section {0} not found in the {1} file'.format(section, filename))
 
         #initialize parameters and variables that will be used
         self.folder_name.setReadOnly(True)
@@ -44,6 +57,8 @@ class DuplicatorClass(QMainWindow, Ui_MainWindow):
         self.start.clicked.connect(self.start_clicked)                  #perfrom duplication when start button is clicked
         self.cancel.clicked.connect(self.cancelOpt)                     #cancel duplication when cancel button is clicked
         self.progressBar.setValue(0)                                    #set progress bar value to 0 at the start
+        self.reset1.clicked.connect(self.resetSource)
+        self.reset2.clicked.connect(self.resetOutput)
 
     def set_default_path(self): #default output path based on server type
         if self.server.currentIndex() == 0:
@@ -57,14 +72,10 @@ class DuplicatorClass(QMainWindow, Ui_MainWindow):
             self.serverType = "VDSPC"
 
         elif self.server.currentIndex() == 2:
-            self.oname = self.defaultpath["VONE"]
-            self.path.setText(self.oname)
-            self.serverType = "VONE"
-
-        elif self.server.currentIndex() == 3:
             self.oname = self.defaultpath["VLIB"]
             self.path.setText(self.oname)
             self.serverType = "V-Lib"
+
 
     def browsefolder(self): #setting source path name (pname) from file browsing
         if self.serverType == "VDSPC":
@@ -89,14 +100,12 @@ class DuplicatorClass(QMainWindow, Ui_MainWindow):
             self.prompt_dialog("Warning", "Please first choose a server!")
 
     def set_fname(self): #finding the source file/folder name and display in UI
-        print("setting fname")
         last_seperator = self.pname.rindex("/")
         self.fname = self.pname[last_seperator + 1:]
         self.folder_name.setText(self.fname)
         self.FindFolderSize()
 
     def FindFolderSize(self): #find the size of source file/folder using thread to prevent UI freezing
-        print("finding file size")
         self.thread = QThread()
         self.worker = FindFileSizeWorker.FindFolderSize()
         self.worker.moveToThread(self.thread)
@@ -108,7 +117,6 @@ class DuplicatorClass(QMainWindow, Ui_MainWindow):
         self.thread.start()
 
     def getFolderSize(self, worker): #method used to retrieve source file/folder size from thread
-        print("getting folder size")
         self.fsize = worker.getTotal()
         bytesFormat = ["B","KB","MB","GB","TB"]
         self.fsizedivided = self.fsize
@@ -123,6 +131,17 @@ class DuplicatorClass(QMainWindow, Ui_MainWindow):
         self.oname=QFileDialog.getExistingDirectory(self, 'Select a folder', 'D:/')
         if self.oname != "":
             self.path.setText(self.oname)
+
+    def resetSource(self):
+        self.folder_name.setText("")
+        self.foldersize.setText("Folder/File size: -")
+        self.pname = ""
+        self.fname = ""
+
+    def resetOutput(self):
+        self.path.setText("")
+        self.diskspace.setText("Free space: -")
+        self.oname = ""
 
     def find_disk_size(self): #method used to find disk size of selected output path
         if self.oname == "":
@@ -147,7 +166,6 @@ class DuplicatorClass(QMainWindow, Ui_MainWindow):
         else:
             if self.find_files_needed():
                 if self.check_available_space():
-                    print("Success")
                     self.duplicating = True
                     self.setBtn()
                     self.changebg()
@@ -167,8 +185,12 @@ class DuplicatorClass(QMainWindow, Ui_MainWindow):
                 return False
         elif self.serverType == "V-Lib":
             name, ext = os.path.splitext(self.pname)
-            if ext != self.files_needed[self.serverType]:
-                self.prompt_dialog("Error", self.files_needed[self.serverType]+" is not inside the source!")
+            vlib_files = self.files_needed[self.serverType].split(",")
+            if ext != vlib_files[0]:
+                self.prompt_dialog("Error", vlib_files[0] +" is not selected!")
+                return False
+            elif os.path.isfile(name+vlib_files[1]) == False:
+                self.prompt_dialog("Error", vlib_files[1] +" is not inside the source!")
                 return False
             else:
                 return True
@@ -183,14 +205,8 @@ class DuplicatorClass(QMainWindow, Ui_MainWindow):
         num = int(self.number.text())
         space_needed = num * self.fsize
         if space_needed < self.disk_space["Free"]:
-            print("Space needed: ",space_needed)
-            print("Free Space available: ",self.disk_space["Free"])
-            print("Enough space")
             return True
         else:
-            print("Space needed: ",space_needed)
-            print("Free Space available: ",self.disk_space["Free"])
-            print("not enough space, False returned")
             return False
 
     def prompt_dialog(self, title, text): #method to prompt notification dialog
@@ -210,12 +226,8 @@ class DuplicatorClass(QMainWindow, Ui_MainWindow):
         self.label_progress_num.setText("0/"+str(self.copies))
         self.progressBar.setValue(0)
         self.thread = QThread()
-        print("thread created")
-        print("is thread alive: ", self.thread.isRunning())
         self.worker = vdspcDuplicateWorker.DuplicateObject()
-        print("worker created")
         self.worker.moveToThread(self.thread)
-        print("worker moved to thread")
         self.worker.setParam(self.pname, self.copies, self.oname)
         self.thread.started.connect(self.worker.run)
         self.worker.finished.connect(lambda: self.resetParam(start_time))
@@ -224,10 +236,10 @@ class DuplicatorClass(QMainWindow, Ui_MainWindow):
         self.worker.finished.connect(self.thread.deleteLater)
         self.worker.progress.connect(self.reportProgress)
         self.thread.start()
-        print("is thread running: ", self.thread.isRunning())
 
-    def DuplicateVLib(self): #V-Lib duplication processusing thread
+    def DuplicateVLib(self): #V-Lib duplication processing thread
         self.proMsg("In Progress")
+        vlib_files = self.files_needed[self.serverType].split(",")
         start_time = time.time()
         self.copies = int(self.number.text())
         self.label_progress_num.setText("0/"+str(self.copies))
@@ -236,13 +248,13 @@ class DuplicatorClass(QMainWindow, Ui_MainWindow):
         self.worker = vlibDuplicateWorker.DuplicateObject()
         self.worker.moveToThread(self.thread)
         self.worker.setParam(self.pname, self.copies, self.oname)
-        self.thread.started.connect(self.worker.run)
+        self.thread.started.connect(lambda: self.worker.run(self.db, vlib_files, self.queries))
         self.worker.finished.connect(lambda: self.resetParam(start_time))
         self.worker.finished.connect(self.thread.quit)
         self.worker.finished.connect(self.worker.deleteLater)
         self.worker.finished.connect(self.thread.deleteLater)
         self.worker.progress.connect(self.reportProgress)
-        self.thread.start()
+        self.thread.start() 
 
     def reportProgress(self,n): #update progress number and progress bar by retrieving data from thread
         self.label_progress_num.setText(str(n) + "/" + str(self.copies))
@@ -272,6 +284,7 @@ class DuplicatorClass(QMainWindow, Ui_MainWindow):
         self.duplicating = False
         self.setBtn()
         self.changebg()
+        self.progressBar.setValue(0)
 
     def setBtn(self): #enable or disable start and cancel button based on duplication status
         if self.duplicating:
@@ -301,3 +314,4 @@ if __name__ == '__main__':
     widget.show()
     # sys.exit(app.exec_())
     app.exec()
+    

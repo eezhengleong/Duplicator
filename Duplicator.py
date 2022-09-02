@@ -230,6 +230,24 @@ class Ui_MainWindow(object):
         self.progressBar.setSizePolicy(sizePolicy)
         self.progressBar.setProperty("value", 24)
         self.progressBar.setObjectName("progressBar")
+        self.reset1 = QtWidgets.QPushButton(self.centralwidget)
+        self.reset1.setGeometry(QtCore.QRect(400, 405, 75, 23))
+        self.reset1.setStyleSheet("QPushButton{\n"
+"background-color: rgb(0, 157, 235);\n"
+"}\n"
+"QPushButton:hover{background-color: rgb(85, 170, 255);}\n"
+"\n"
+"")
+        self.reset1.setObjectName("reset1")
+        self.reset2 = QtWidgets.QPushButton(self.centralwidget)
+        self.reset2.setGeometry(QtCore.QRect(400, 520, 75, 23))
+        self.reset2.setStyleSheet("QPushButton{\n"
+"background-color: rgb(0, 157, 235);\n"
+"}\n"
+"QPushButton:hover{background-color: rgb(85, 170, 255);}\n"
+"\n"
+"")
+        self.reset2.setObjectName("reset2")
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 21))
@@ -265,6 +283,8 @@ class Ui_MainWindow(object):
         self.label_7.setText(_translate("MainWindow", "Folder/File selected:"))
         self.cancel.setText(_translate("MainWindow", "Cancel"))
         self.foldersize.setText(_translate("MainWindow", "Folder/File size: -"))
+        self.reset1.setText(_translate("MainWindow", "Reset"))
+        self.reset2.setText(_translate("MainWindow", "Reset"))
 from FileEdit import FileEdit
 
 

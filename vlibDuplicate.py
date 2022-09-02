@@ -1,7 +1,6 @@
 import os
+from queue import Empty
 import shutil
-
-src = 'C:/CPI/cad/AOITestBoard_testing.datj'
 
 def extractName(src):
     condition = '/'
@@ -13,30 +12,43 @@ def extractName(src):
 
     return(DBName)
 
-def DuplicateFile(src, output, dbname):
+def DuplicateFile(src, output, dbname, file_list, conn, cur, q):
     
     count = 0
     num = 0 
 
     while count <= 0:
-        dest = output + '/' + dbname + '_' + str(num) + '.datj'
+        name, ext = os.path.splitext(src)
+        dest = output + '/' + dbname + '_' + str(num)
 
-        print(dest)
+        #print(dest)
 
-        isdir = os.path.exists(dest)
+        isdir = os.path.exists(dest+".datj")
         
-        print(isdir)
+        #print(isdir)
         
         if isdir == True:
             num += 1
         
         else:
-            os.makedirs(os.path.dirname(dest), exist_ok=True)
-            shutil.copyfile(src, dest)
-            count += 1
+            cur.execute(q,("cad/" + dbname + "_" + str(num) + ".dat",))
+            conn.commit()
+            check = cur.fetchone()
+            print("executed: ", check)
+            print(check != None)
+            if check != None:
+                num+=1
+                print("Library exists inside sql")
+            else:
+                for i in file_list:
+                    os.makedirs(os.path.dirname(dest+i), exist_ok=True)
+                    shutil.copyfile(name+i, dest+i)
 
+                count += 1
+                filename = "cad/" + dbname + "_" + str(num) + ".dat"
+                return filename
 
-
-def main(src,output, dbname):
-    DuplicateFile(src, output, dbname)
+def main(src,output, dbname, file_list, conn, cur, q):
+    filename = DuplicateFile(src, output, dbname, file_list, conn, cur, q)
+    return filename
 

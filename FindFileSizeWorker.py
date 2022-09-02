@@ -5,7 +5,6 @@ import FindFileSize
 
 class FindFolderSize(QObject):
     finished = pyqtSignal()
-    total = 0
     def __init__(self):
         super(FindFolderSize, self).__init__()
 

@@ -121,11 +121,6 @@ border-radius: 4px;</string>
     </item>
     <item>
      <property name="text">
-      <string>VONE</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
       <string>V-Lib</string>
      </property>
     </item>
@@ -532,6 +527,48 @@ QPushButton:hover{background-color: rgb(255, 85, 127);}
     </property>
     <property name="value">
      <number>24</number>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="reset1">
+    <property name="geometry">
+     <rect>
+      <x>400</x>
+      <y>405</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QPushButton{
+background-color: rgb(0, 157, 235);
+}
+QPushButton:hover{background-color: rgb(85, 170, 255);}
+
+</string>
+    </property>
+    <property name="text">
+     <string>Reset</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="reset2">
+    <property name="geometry">
+     <rect>
+      <x>400</x>
+      <y>520</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QPushButton{
+background-color: rgb(0, 157, 235);
+}
+QPushButton:hover{background-color: rgb(85, 170, 255);}
+
+</string>
+    </property>
+    <property name="text">
+     <string>Reset</string>
     </property>
    </widget>
   </widget>
