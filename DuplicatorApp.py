@@ -141,6 +141,7 @@ class DuplicatorClass(QMainWindow, Ui_MainWindow):
         self.thread.started.connect(self.worker.run)
         self.worker.finished.connect(lambda: self.getFolderSize(self.worker))
         self.worker.finished.connect(self.thread.quit)
+        self.worker.finished.connect(self.thread.wait)
         self.worker.finished.connect(self.worker.deleteLater)
         self.worker.finished.connect(self.thread.deleteLater)
         self.thread.start()
