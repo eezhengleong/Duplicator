@@ -1,25 +1,25 @@
 import sys, time, configparser, os
 from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog, QMessageBox
+from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog, QMessageBox, QInputDialog
 from PyQt5.QtGui import QIntValidator
 from PyQt5.QtCore import QThread
 from PyQt5.uic import loadUi
 from Duplicator import Ui_MainWindow
 import FindFileSize, vdspcDuplicateWorker, FindFileSizeWorker, vlibDuplicateWorker, FileEdit, logging
 
-# class DuplicatorClass(QMainWindow, Ui_MainWindow):
-#     def __init__(self, *args, obj=None, **kwargs):
-#         super(DuplicatorClass,self).__init__(*args, **kwargs)
-#         self.setupUi(self)
+class DuplicatorClass(QMainWindow, Ui_MainWindow):
+    def __init__(self, *args, obj=None, **kwargs):
+        super(DuplicatorClass,self).__init__(*args, **kwargs)
+        self.setupUi(self)
 
-class DuplicatorClass(QMainWindow):
-    def __init__(self):
-        super(DuplicatorClass,self).__init__()
-        loadUi("UI\Duplicator.ui",self)
+# class DuplicatorClass(QMainWindow):
+#     def __init__(self):
+#         super(DuplicatorClass,self).__init__()
+#         loadUi("UI\Duplicator.ui",self)
         
         self.config_obj = configparser.ConfigParser(interpolation = None)
         self.config_obj.read("DuplicatorConfig.cfg")
-        self.defaultpath = self.config_obj["default_output"]
+        self.defaultpath = self.config_obj["default_path"]
         self.files_needed = self.config_obj["files_to_look_for"]
         self.postgres = self.config_obj["postgresql"]
         self.queries = self.config_obj["query"]
@@ -35,17 +35,21 @@ class DuplicatorClass(QMainWindow):
         self.folder_name.setReadOnly(True)
         self.path.setReadOnly(True)
         self.onlyInt = QIntValidator()
-        self.onlyInt.setRange(0,86400)
+        self.onlyInt.setRange(0,1000000)
         self.number.setValidator(self.onlyInt)
         self.pname = ""                                                 #path name of selected folder
         self.fname = ""                                                 #folder name of selected folder
         self.oname = ""                                                 #output path name 
         self.fsize = 0                                                  #file size
         self.disk_space = {}                                            #available disk space, inside this will have {"Total","Used","Free"}, but we will only use free
+        self.able_copy = 0                                              #maximum number of copies able to accomodate the disk size
+        self.space_needed = 0
         self.copies = 0                                                 #holds the number of files to be copied
         self.copied = 0                                                 #holds the number of coiped files
         self.duplicating = False                                        #indicator for duplication process
+        self.OCV = False
         self.serverType = ""                                            #holds the server type
+        self.bytesFormat = ["B","KB","MB","GB","TB"]
         self.setBtn()                                                   #enable or disable start and cancel button
         self.changebg()                                                 #change bg colour based on status
         #set actions on the UI
@@ -53,12 +57,36 @@ class DuplicatorClass(QMainWindow):
         self.dnd.textChanged.connect(self.set_pname)                    #drag and drop(dnd) feature
         self.browse_folder.clicked.connect(self.browsefolder)           #open file explorer to select a source folder
         self.browse_path.clicked.connect(self.browsepath)               #open file explorer to select an output path
-        self.path.textChanged.connect(self.find_disk_size)              #find available disk size when output ppath is selected
+        self.path.textChanged.connect(self.find_disk_size)              #find available disk size when output path is selected
+        self.path.textChanged.connect(self.calculate_copies)
+        self.folder_name.textChanged.connect(self.calculate_copies)
+        self.number.textChanged.connect(self.calculate_copies)          #show the maximum number of copies able to duplicate depending on the disk space and source size
         self.start.clicked.connect(self.start_clicked)                  #perfrom duplication when start button is clicked
         self.cancel.clicked.connect(self.cancelOpt)                     #cancel duplication when cancel button is clicked
         self.progressBar.setValue(0)                                    #set progress bar value to 0 at the start
         self.reset1.clicked.connect(self.resetSource)
         self.reset2.clicked.connect(self.resetOutput)
+
+    def calculate_copies(self):
+        if self.fsize != 0 and len(self.disk_space) != 0:
+            self.able_copy = int(self.disk_space["Free"]/self.fsize)
+            self.max_copies.setText("Maximum number of copies: " + str(self.able_copy))
+        else:
+            self.able_copy = 0
+            self.max_copies.setText("Maximum number of copies: -")
+
+        if self.number.text() != "0" and self.number.text() != "" and self.fsize != 0:
+            num = int(self.number.text())
+            self.space_needed = num * self.fsize
+            spaceneeded = self.space_needed
+            for i in self.bytesFormat:
+                if spaceneeded > 1024:
+                    spaceneeded = spaceneeded / 1024
+                else:
+                    self.needed_space.setText("Space needed: " + "{:.2f}".format(spaceneeded)+i)
+                    break
+        else:
+            self.needed_space.setText("Space needed: -")
 
     def set_default_path(self): #default output path based on server type
         if self.server.currentIndex() == 0:
@@ -72,7 +100,7 @@ class DuplicatorClass(QMainWindow):
             self.serverType = "VDSPC"
 
         elif self.server.currentIndex() == 2:
-            self.oname = self.defaultpath["VLIB"]
+            self.oname = self.defaultpath["VLib_PL"]
             self.path.setText(self.oname)
             self.serverType = "V-Lib"
 
@@ -109,7 +137,8 @@ class DuplicatorClass(QMainWindow):
         self.thread = QThread()
         self.worker = FindFileSizeWorker.FindFolderSize()
         self.worker.moveToThread(self.thread)
-        self.thread.started.connect(lambda: self.worker.run(self.pname))
+        self.worker.set_param(self.pname)
+        self.thread.started.connect(self.worker.run)
         self.worker.finished.connect(lambda: self.getFolderSize(self.worker))
         self.worker.finished.connect(self.thread.quit)
         self.worker.finished.connect(self.worker.deleteLater)
@@ -118,9 +147,9 @@ class DuplicatorClass(QMainWindow):
 
     def getFolderSize(self, worker): #method used to retrieve source file/folder size from thread
         self.fsize = worker.getTotal()
-        bytesFormat = ["B","KB","MB","GB","TB"]
+        self.calculate_copies()
         self.fsizedivided = self.fsize
-        for i in bytesFormat:
+        for i in self.bytesFormat:
             if self.fsizedivided > 1024:
                 self.fsizedivided = self.fsizedivided / 1024
             else:
@@ -137,11 +166,15 @@ class DuplicatorClass(QMainWindow):
         self.foldersize.setText("Folder/File size: -")
         self.pname = ""
         self.fname = ""
+        self.fsize = 0
+        self.calculate_copies()
 
     def resetOutput(self):
         self.path.setText("")
         self.diskspace.setText("Free space: -")
         self.oname = ""
+        self.disk_space = {}
+        self.calculate_copies()
 
     def find_disk_size(self): #method used to find disk size of selected output path
         if self.oname == "":
@@ -167,14 +200,34 @@ class DuplicatorClass(QMainWindow):
             if self.find_files_needed():
                 if self.check_available_space():
                     self.duplicating = True
-                    self.setBtn()
-                    self.changebg()
+                    
                     if self.serverType == "VDSPC":
+                        self.setBtn()
+                        self.changebg()
                         self.DuplicateVDSPC()
                     elif self.serverType == "V-Lib":
-                        self.DuplicateVLib()
+                        if self.PL_OCV():
+                            self.setBtn()
+                            self.changebg()
+                            self.DuplicateVLib()
+                        else:
+                            print("nothing happened")
                 else:
                     self.prompt_dialog("Error", "Not enough space!")
+
+    def PL_OCV(self):
+        items = ("Part Library only", "Part and OCV Library")
+        item, okPressed = QInputDialog.getItem(self, "Please Choose", "Options: ", items, 0, False)
+        if okPressed and item:
+            print(item)
+            if item == items[0]:
+                self.OCV = False
+            elif item == items[1]:
+                self.OCV = True
+            return True
+        else:
+            print("Cancelled")
+            return False
 
     def find_files_needed(self):
         if self.serverType == "VDSPC":
@@ -202,9 +255,7 @@ class DuplicatorClass(QMainWindow):
             self.setStyleSheet("""QMainWindow{background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0 rgba(255, 255, 127, 255), stop:0.875 rgba(255, 255, 255, 255));}""")
 
     def check_available_space(self): #compare space needed with space available on disk
-        num = int(self.number.text())
-        space_needed = num * self.fsize
-        if space_needed < self.disk_space["Free"]:
+        if self.space_needed < self.disk_space["Free"]:
             return True
         else:
             return False
@@ -247,8 +298,8 @@ class DuplicatorClass(QMainWindow):
         self.thread = QThread()
         self.worker = vlibDuplicateWorker.DuplicateObject()
         self.worker.moveToThread(self.thread)
-        self.worker.setParam(self.pname, self.copies, self.oname)
-        self.thread.started.connect(lambda: self.worker.run(self.db, vlib_files, self.queries))
+        self.worker.setParam(self.pname, self.copies, self.oname, self.db, vlib_files, self.queries, self.OCV, self.defaultpath["VLib_OCV"])
+        self.thread.started.connect(self.worker.run)
         self.worker.finished.connect(lambda: self.resetParam(start_time))
         self.worker.finished.connect(self.thread.quit)
         self.worker.finished.connect(self.worker.deleteLater)
@@ -285,6 +336,7 @@ class DuplicatorClass(QMainWindow):
         self.setBtn()
         self.changebg()
         self.progressBar.setValue(0)
+        self.OCV = False
 
     def setBtn(self): #enable or disable start and cancel button based on duplication status
         if self.duplicating:

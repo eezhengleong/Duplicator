@@ -40,8 +40,8 @@ cur = conn.cursor()
 # cur.execute(q2, to_insert2)
 
 
-for i in range (0,5):
-    new_name = ("cad/AOITestBoard_new_0_"+str(i)+".dat",)
+for i in range (0,148):
+    new_name = ("cad/AOITestBoard_new_"+str(i)+".dat",)
     q3 = """DELETE from family_library_linkages WHERE library_name = %s"""
     cur.execute(q3,new_name)
 

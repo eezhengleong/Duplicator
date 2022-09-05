@@ -12,7 +12,7 @@ def extractName(src):
 
     return(DBName)
 
-def DuplicateFile(src, output, dbname, file_list, conn, cur, q):
+def DuplicateFile(src, output, dbname, file_list, conn, cur, q, ocv, ocv_path):
     
     count = 0
     num = 0 
@@ -43,12 +43,14 @@ def DuplicateFile(src, output, dbname, file_list, conn, cur, q):
                 for i in file_list:
                     os.makedirs(os.path.dirname(dest+i), exist_ok=True)
                     shutil.copyfile(name+i, dest+i)
+                if ocv:
+                    shutil.copytree(ocv_path+"/"+dbname, ocv_path+"/"+dbname+"_"+str(num))
 
                 count += 1
                 filename = "cad/" + dbname + "_" + str(num) + ".dat"
                 return filename
 
-def main(src,output, dbname, file_list, conn, cur, q):
-    filename = DuplicateFile(src, output, dbname, file_list, conn, cur, q)
+def main(src,output, dbname, file_list, conn, cur, q, ocv, ocv_path):
+    filename = DuplicateFile(src, output, dbname, file_list, conn, cur, q, ocv, ocv_path)
     return filename
 

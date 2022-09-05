@@ -221,7 +221,7 @@ border-radius: 4px;
     <property name="geometry">
      <rect>
       <x>510</x>
-      <y>150</y>
+      <y>140</y>
       <width>291</width>
       <height>41</height>
      </rect>
@@ -240,7 +240,7 @@ border-radius: 4px;
     <property name="geometry">
      <rect>
       <x>510</x>
-      <y>190</y>
+      <y>180</y>
       <width>291</width>
       <height>41</height>
      </rect>
@@ -304,7 +304,7 @@ border-radius: 4px;
     <property name="geometry">
      <rect>
       <x>560</x>
-      <y>440</y>
+      <y>490</y>
       <width>91</width>
       <height>51</height>
      </rect>
@@ -457,7 +457,7 @@ border-radius: 4px;
     <property name="geometry">
      <rect>
       <x>670</x>
-      <y>440</y>
+      <y>490</y>
       <width>91</width>
       <height>51</height>
      </rect>
@@ -514,7 +514,7 @@ QPushButton:hover{background-color: rgb(255, 85, 127);}
     <property name="geometry">
      <rect>
       <x>605</x>
-      <y>240</y>
+      <y>230</y>
       <width>131</width>
       <height>23</height>
      </rect>
@@ -569,6 +569,62 @@ QPushButton:hover{background-color: rgb(85, 170, 255);}
     </property>
     <property name="text">
      <string>Reset</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="max_copies">
+    <property name="geometry">
+     <rect>
+      <x>520</x>
+      <y>400</y>
+      <width>271</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>MS Shell Dlg 2</family>
+      <pointsize>10</pointsize>
+      <weight>50</weight>
+      <italic>false</italic>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true"/>
+    </property>
+    <property name="text">
+     <string>Maximum number of copies: -</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="needed_space">
+    <property name="geometry">
+     <rect>
+      <x>520</x>
+      <y>425</y>
+      <width>271</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>MS Shell Dlg 2</family>
+      <pointsize>12</pointsize>
+      <weight>50</weight>
+      <italic>false</italic>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true"/>
+    </property>
+    <property name="text">
+     <string>Space needed: -</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
     </property>
    </widget>
   </widget>
