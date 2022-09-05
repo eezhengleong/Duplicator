@@ -34,9 +34,7 @@ class DuplicatorClass(QMainWindow, Ui_MainWindow):
         #initialize parameters and variables that will be used
         self.folder_name.setReadOnly(True)
         self.path.setReadOnly(True)
-        self.onlyInt = QIntValidator()
-        self.onlyInt.setRange(0,1000000)
-        self.number.setValidator(self.onlyInt)
+        self.number.setValidator(QIntValidator())
         self.pname = ""                                                 #path name of selected folder
         self.fname = ""                                                 #folder name of selected folder
         self.oname = ""                                                 #output path name 
@@ -74,6 +72,9 @@ class DuplicatorClass(QMainWindow, Ui_MainWindow):
         else:
             self.able_copy = 0
             self.max_copies.setText("Maximum number of copies: -")
+
+        if self.number.text() == "+" or self.number.text() == "-":
+            self.number.setText("")
 
         if self.number.text() != "0" and self.number.text() != "" and self.fsize != 0:
             num = int(self.number.text())
