@@ -117,6 +117,8 @@ class DuplicatorClass(QMainWindow, Ui_MainWindow):
 
         if self.pname != "" and self.serverType != "":
             self.set_fname()
+        else:
+            self.resetSource()
 
     def set_pname(self): #setting source path name (pname) from drag and drop
         if self.dnd.text() != "Drag and Drop" and self.serverType != "":
@@ -161,6 +163,8 @@ class DuplicatorClass(QMainWindow, Ui_MainWindow):
         self.oname=QFileDialog.getExistingDirectory(self, 'Select a folder', 'D:/')
         if self.oname != "":
             self.path.setText(self.oname)
+        else:
+            self.resetOutput()
 
     def resetSource(self):
         self.folder_name.setText("")
