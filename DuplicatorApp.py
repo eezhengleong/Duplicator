@@ -75,7 +75,7 @@ class DuplicatorClass(QMainWindow, Ui_MainWindow): #open ui from another py file
         self.files_needed = self.config_obj["files_to_look_for"]
         self.queries = self.config_obj["query"]
         self.db = {}
-
+        
         if self.config_obj.has_section("postgresql"):
             params = self.config_obj.items("postgresql")
             for param in params:
