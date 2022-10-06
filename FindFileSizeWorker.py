@@ -8,11 +8,14 @@ class FindFolderSize(QObject):
     def __init__(self):
         super(FindFolderSize, self).__init__()
 
-    def set_param(self, path="."):
+    def set_param(self, path):  #path is a list
         self.path = path
+        self.total = 0
 
     def run(self):
-        self.total = FindFileSize.get_dir_size(self.path)
+        for i in self.path:
+            self.total += FindFileSize.get_dir_size(i)
+        print("emit")
         self.finished.emit()
 
     def getTotal(self):

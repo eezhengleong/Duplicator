@@ -1,56 +1,47 @@
-import os
-from queue import Empty
-import shutil
+from distutils import filelist
+import os, shutil, pl_ocvDuplicate, pgmDuplicate
 
-def extractName(src):
-    condition = '/'
-    condition2 = '.'
-    position = src.rindex(condition)
-    position2 = src.rindex(condition2)
+from pgmDuplicate import produceName
 
-    DBName = src[position + 1 : position2]
+def main(pgm, db, dbname, plpath, ocvpath, pgmpath, conn, cur, q, selection, file_list, ocv, defaultpath):
+    program = pgmDuplicate.main(pgm, selection, pgmpath)
+    database = pl_ocvDuplicate.main(db, plpath, dbname, file_list, conn, cur, q, ocv, ocvpath, defaultpath)
+    return database, program
+    # newpgmname = producePgmName(pgmname, pgmpath)
+    # newdbname = produceDbName(dbname, plpath, conn, cur, q)
+    # duplicatemethod(source, newpgmname, newdbname, plpath, ocvpath, pgmpath)
 
-    return(DBName)
-
-def DuplicateFile(src, output, dbname, file_list, conn, cur, q, ocv, ocv_path):
-    
-    count = 0
-    num = 0 
-
-    while count <= 0:
-        name, ext = os.path.splitext(src)
-        dest = output + '/' + dbname + '_' + str(num)
-
-        #print(dest)
-
-        isdir = os.path.exists(dest+".datj")
-        
-        #print(isdir)
-        
-        if isdir == True:
-            num += 1
-        
+def duplicatemethod(source, newpgmname, newdbname, plpath, ocvpath, pgmpath):
+    for i in source:
+        if i.split(".")[-1] == "datj" or i.split(".")[-1] == "alt":
+            shutil.copyfile(i, plpath + "/" + newdbname + i.split(".")[-1])
+        elif os.path.exists(i+"/model_info.ocv"):
+            shutil.copytree(i, ocvpath + "/" + newdbname)
         else:
-            cur.execute(q,("cad/" + dbname + "_" + str(num) + ".dat",))
+            pass
+
+def producePgmName(pgmname, pgmpath):
+    count = 0
+    while True:
+        newName = pgmname + "_" + str(count)
+        if os.path.exists(pgmpath + "/" + newName + ".plx") == False:
+            return newName
+        else:
+            count += 1
+
+def produceDbName(dbname, plpath, conn, cur, q):
+    count = 0
+    while True:
+        newName = dbname + "_" + str(count)
+        if os.path.exists(plpath + "/" + newName + ".datj"):
+            count += 1
+        else:
+            cur.execute(q,("cad/" + newName + ".dat",))
             conn.commit()
             check = cur.fetchone()
-            print("executed: ", check)
-            print(check != None)
             if check != None:
-                num+=1
-                print("Library exists inside sql")
-            else:
-                for i in file_list:
-                    os.makedirs(os.path.dirname(dest+i), exist_ok=True)
-                    shutil.copyfile(name+i, dest+i)
-                if ocv:
-                    shutil.copytree(ocv_path+"/"+dbname, ocv_path+"/"+dbname+"_"+str(num))
-
+                print("Library exists inside SQL")
                 count += 1
-                filename = "cad/" + dbname + "_" + str(num) + ".dat"
-                return filename
-
-def main(src,output, dbname, file_list, conn, cur, q, ocv, ocv_path):
-    filename = DuplicateFile(src, output, dbname, file_list, conn, cur, q, ocv, ocv_path)
-    return filename
+            else:
+                return newName
 

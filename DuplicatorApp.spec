@@ -8,7 +8,7 @@ a = Analysis(
     ['DuplicatorApp.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[('folder.ico', '.')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
@@ -41,4 +41,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon='folder.ico',
 )

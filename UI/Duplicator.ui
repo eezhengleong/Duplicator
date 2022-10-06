@@ -43,7 +43,7 @@ QMainWindow{background-color: rgb(240, 240, 240);}
      <string notr="true">font: 26pt &quot;Reem Kufi&quot;;</string>
     </property>
     <property name="text">
-     <string>Folder Duplicator</string>
+     <string>Data Duplicator</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
@@ -107,11 +107,11 @@ border-radius: 4px;</string>
      <bool>false</bool>
     </property>
     <property name="currentText">
-     <string>--Choose Server--</string>
+     <string>--Please Choose--</string>
     </property>
     <item>
      <property name="text">
-      <string>--Choose Server--</string>
+      <string>--Please Choose--</string>
      </property>
     </item>
     <item>
@@ -304,7 +304,7 @@ border-radius: 4px;
     <property name="geometry">
      <rect>
       <x>560</x>
-      <y>490</y>
+      <y>480</y>
       <width>91</width>
       <height>51</height>
      </rect>
@@ -382,7 +382,7 @@ QPushButton:hover{background-color: rgb(170, 255, 127);}
      <rect>
       <x>70</x>
       <y>520</y>
-      <width>271</width>
+      <width>321</width>
       <height>31</height>
      </rect>
     </property>
@@ -457,7 +457,7 @@ border-radius: 4px;
     <property name="geometry">
      <rect>
       <x>670</x>
-      <y>490</y>
+      <y>480</y>
       <width>91</width>
       <height>51</height>
      </rect>
@@ -583,7 +583,7 @@ QPushButton:hover{background-color: rgb(85, 170, 255);}
     <property name="font">
      <font>
       <family>MS Shell Dlg 2</family>
-      <pointsize>10</pointsize>
+      <pointsize>11</pointsize>
       <weight>50</weight>
       <italic>false</italic>
       <bold>false</bold>
@@ -603,7 +603,7 @@ QPushButton:hover{background-color: rgb(85, 170, 255);}
     <property name="geometry">
      <rect>
       <x>520</x>
-      <y>425</y>
+      <y>420</y>
       <width>271</width>
       <height>21</height>
      </rect>
@@ -611,7 +611,7 @@ QPushButton:hover{background-color: rgb(85, 170, 255);}
     <property name="font">
      <font>
       <family>MS Shell Dlg 2</family>
-      <pointsize>12</pointsize>
+      <pointsize>11</pointsize>
       <weight>50</weight>
       <italic>false</italic>
       <bold>false</bold>
@@ -625,6 +625,27 @@ QPushButton:hover{background-color: rgb(85, 170, 255);}
     </property>
     <property name="alignment">
      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="settingsbtn">
+    <property name="geometry">
+     <rect>
+      <x>400</x>
+      <y>144</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QPushButton{
+background-color: rgb(0, 157, 235);
+}
+QPushButton:hover{background-color: rgb(85, 170, 255);}
+
+</string>
+    </property>
+    <property name="text">
+     <string>Settings</string>
     </property>
    </widget>
   </widget>
