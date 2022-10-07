@@ -45,13 +45,13 @@ class VLibSettings(QDialog, Ui_Dialog):
             self.browsepgm.setStyleSheet(enabledSS)
 
     def partbrowsing(self):
-        output = QFileDialog.getExistingDirectory(self, 'Select a folder', 'D:/')
+        output = QFileDialog.getExistingDirectory(self, 'Select a folder', 'C:/')
         self.partpath.setText(output)
 
     def ocvbrowsing(self):
-        output = QFileDialog.getExistingDirectory(self, 'Select a folder', 'D:/')
+        output = QFileDialog.getExistingDirectory(self, 'Select a folder', 'C:/')
         self.ocvpath.setText(output)
 
     def pgmbrowsing(self):
-        output = QFileDialog.getExistingDirectory(self, 'Select a folder', 'D:/')
+        output = QFileDialog.getExistingDirectory(self, 'Select a folder', 'C:/')
         self.pgmpath.setText(output)

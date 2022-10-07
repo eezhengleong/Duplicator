@@ -36,7 +36,7 @@ class DuplicatorClass(QMainWindow, Ui_MainWindow): #open ui from another py file
         self.pname = ""                                                 #path name of selected folder
         self.fname = ""                                                 #folder name of selected folder
         self.fsize = 0                                                  #file size
-        self.VDSCPpath = ""                                             #output path name
+        self.VDSPCpath = ""                                             #output path name
         self.disk_space = {}                                            #available disk space, inside this will have {"Total","Used","Free"}, but we will only use free
         self.copies = 0                                                 #holds the number of files to be copied
         self.copied = 0                                                 #holds the number of coiped files
@@ -58,7 +58,6 @@ class DuplicatorClass(QMainWindow, Ui_MainWindow): #open ui from another py file
         self.dnd.textChanged.connect(self.set_pname)                    #drag and drop(dnd) feature
         self.browse_folder.clicked.connect(self.browsefolder)           #open file explorer to select a source folder
         self.browse_path.clicked.connect(self.browsepath)               #open file explorer to select an output path
-        self.path.textChanged.connect(self.find_disk_size)              #find available disk size when output path is selected
         self.path.textChanged.connect(self.calculate_copies)            #calculate maximum number of copies when output path is changed, depending on the disk space and source size
         self.folder_name.textChanged.connect(self.calculate_copies)     #calculate maximum number of copies when source is changed, depending on the disk space and source size
         self.number.textChanged.connect(self.calculate_copies)          #calculate maximum number of copies when number is changed, depending on the disk space and source size
@@ -174,21 +173,42 @@ class DuplicatorClass(QMainWindow, Ui_MainWindow): #open ui from another py file
 
     def set_default_path(self): #default output path based on server type
         if self.server.currentIndex() == 0:
-            self.VDSCPpath = ""
+            self.VDSPCpath = ""
             self.path.setText("")
             self.serverType = ""
             self.resetSource()
         
         elif self.server.currentIndex() == 1:
             self.serverType = "VDSPC"
-            self.VDSCPpath = self.defaultpath["VDSPC"]
-            self.path.setText(self.VDSCPpath)
+            self.VDSPCpath = self.defaultpath["VDSPC"]
+            if os.path.isdir(self.VDSPCpath):
+                self.path.setText(self.VDSPCpath)
+                self.find_disk_size()
+            else:
+                self.resetOutput()
+                self.prompt_dialog("Warning", "Default path is not found. Please select one manually.")
             self.path.setDisabled(False)
             self.resetSource()
+            
 
         elif self.server.currentIndex() == 2:
             self.serverType = "VLib"
             self.path.setText("Please click browse on the right...")
+            if os.path.isdir(self.PLpath) == False:
+                self.prompt_dialog("Warning", "Default path for Part Library is not found. Please select one manually.")
+                self.PLpath = ""
+
+            if os.path.isdir(self.OCVpath) == False:
+                self.prompt_dialog("Warning", "Default path for OCV Library is not found. Please select one manually.")
+                self.OCVpath = ""
+
+            if os.path.isdir(self.Pgmpath) == False:
+                self.prompt_dialog("Warning", "Default path for Program Library is not found. Please select one manually.")
+                self.Pgmpath = ""
+            
+            if os.path.isdir(self.PLpath) and os.path.isdir(self.OCVpath) and os.path.isdir(self.Pgmpath):
+                self.find_disk_size()
+
             self.path.setDisabled(True)
             self.resetSource()
         
@@ -398,9 +418,9 @@ class DuplicatorClass(QMainWindow, Ui_MainWindow): #open ui from another py file
     def browsepath(self): #setting output path from browsing
         #VDSPC only needs one path, a normal browsing will do
         if self.serverType == "VDSPC":
-            self.VDSCPpath=QFileDialog.getExistingDirectory(self, 'Select a folder', 'D:/')
-            if self.VDSCPpath != "":
-                self.path.setText(self.VDSCPpath)
+            self.VDSPCpath=QFileDialog.getExistingDirectory(self, 'Select a folder', 'C:/')
+            if self.VDSPCpath != "":
+                self.path.setText(self.VDSPCpath)
             else:
                 self.resetOutput()
 
@@ -414,10 +434,25 @@ class DuplicatorClass(QMainWindow, Ui_MainWindow): #open ui from another py file
         self.PLpath = self.chooseVlibPath.partpath.text()
         self.OCVpath = self.chooseVlibPath.ocvpath.text()
         self.Pgmpath = self.chooseVlibPath.pgmpath.text()
+        if os.path.isdir(self.PLpath) == False:
+                self.prompt_dialog("Warning", "Default path for Part Library is not input. Please select one manually.")
+                self.PLpath = ""
+
+        if os.path.isdir(self.OCVpath) == False:
+            self.prompt_dialog("Warning", "Default path for OCV Library is not input. Please select one manually.")
+            self.OCVpath = ""
+
+        if os.path.isdir(self.Pgmpath) == False:
+            self.prompt_dialog("Warning", "Default path for Program Library is not input. Please select one manually.")
+            self.Pgmpath = ""
         print(self.PLpath)
         print(self.OCVpath)
         print(self.Pgmpath)
-        self.find_disk_size()
+        
+        if os.path.isdir(self.PLpath) and os.path.isdir(self.OCVpath) and os.path.isdir(self.Pgmpath):
+            self.find_disk_size()
+        else:
+            self.browsepath()
 
     def resetSource(self):  #reset source when clicked
         self.folder_name.setText("")
@@ -430,7 +465,7 @@ class DuplicatorClass(QMainWindow, Ui_MainWindow): #open ui from another py file
     def resetOutput(self):  #reset output path when clicked
         self.path.setText("")
         self.diskspace.setText("Free space: -")
-        self.VDSCPpath = ""
+        self.VDSPCpath = ""
         self.disk_space = {}
         self.calculate_copies()
 
@@ -438,11 +473,11 @@ class DuplicatorClass(QMainWindow, Ui_MainWindow): #open ui from another py file
         self.disk_space = {}
 
         if self.serverType == "VDSPC":
-            if self.VDSCPpath == "":
+            if self.VDSPCpath == "":
                 self.diskspace.setText("Free space: ")
             else:
-                space = FindFileSize.get_disk_size(self.VDSCPpath)
-                self.disk_space[self.VDSCPpath[0]] = space["Free"]
+                space = FindFileSize.get_disk_size(self.VDSPCpath)
+                self.disk_space[self.VDSPCpath[0]] = space["Free"]
 
         else:
             space = FindFileSize.get_disk_size(self.PLpath)
@@ -471,7 +506,7 @@ class DuplicatorClass(QMainWindow, Ui_MainWindow): #open ui from another py file
             self.prompt_dialog("Error","Please choose a folder!")
         
         #check whether output path is set for VDSPC
-        elif self.VDSCPpath == "" and self.serverType == "VDSPC":
+        elif self.VDSPCpath == "" and self.serverType == "VDSPC":
             self.prompt_dialog("Error","Please choose an output path!")
 
         #check whether output path for Part Library is set when enabled
@@ -603,7 +638,7 @@ class DuplicatorClass(QMainWindow, Ui_MainWindow): #open ui from another py file
         self.thread = QThread()
         self.worker = vdspcDuplicateWorker.DuplicateObject()
         self.worker.moveToThread(self.thread)
-        self.worker.setParam(self.pname, self.copies, self.VDSCPpath)
+        self.worker.setParam(self.pname, self.copies, self.VDSPCpath)
         self.thread.started.connect(self.worker.run)
         self.worker.finished.connect(lambda: self.resetParam(start_time))
         self.worker.finished.connect(self.thread.quit)
